@@ -1,11 +1,5 @@
 name: dbt CI
 
-# Why this file matters: this is the single piece of "production-grade
-# pipeline" evidence a hiring manager can verify without asking you anything —
-# they can open the Actions tab on GitHub and see it passing green.
-# It runs automatically on every push, so a broken model or failed test
-# never silently lands on the main branch.
-
 on:
   push:
     branches: [main]
@@ -28,10 +22,6 @@ jobs:
         run: pip install dbt-core dbt-duckdb
 
       - name: Create profiles.yml
-        # profiles.yml isn't committed (it's gitignored — see README), so CI
-        # generates its own copy here instead. This is the standard pattern:
-        # the file is environment-specific by design, so every environment
-        # (your laptop, CI, a teammate's machine) creates its own.
         run: |
           mkdir -p ~/.dbt
           cat > ~/.dbt/profiles.yml << 'EOF'
@@ -48,4 +38,4 @@ jobs:
         run: dbt seed
 
       - name: Build all models
-        run: dbt build   # `dbt build` = run models AND run tests, in dependency order
+        run: dbt build  
