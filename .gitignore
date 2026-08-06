@@ -5,3 +5,5 @@ venv/
 *.duckdb
 .env
 __pycache__/
+profiles.yml
+.user.yml
