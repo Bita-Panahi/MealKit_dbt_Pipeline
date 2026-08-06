@@ -27,6 +27,23 @@ jobs:
       - name: Install dbt-duckdb
         run: pip install dbt-core dbt-duckdb
 
+      - name: Create profiles.yml
+        # profiles.yml isn't committed (it's gitignored — see README), so CI
+        # generates its own copy here instead. This is the standard pattern:
+        # the file is environment-specific by design, so every environment
+        # (your laptop, CI, a teammate's machine) creates its own.
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          mealkit_pipeline:
+            target: dev
+            outputs:
+              dev:
+                type: duckdb
+                path: mealkit.duckdb
+                threads: 4
+          EOF
+
       - name: Seed raw data
         run: dbt seed
 
