@@ -1,10 +1,8 @@
 version: 2
 
-# This file declares the raw seed tables as dbt "sources" — the entry point
-# of the whole pipeline. Everything downstream traces back to here.
 sources:
   - name: raw
-    schema: main   # DuckDB's default schema; seeds land here after `dbt seed`
+    schema: main  
     tables:
       - name: customers
       - name: orders
