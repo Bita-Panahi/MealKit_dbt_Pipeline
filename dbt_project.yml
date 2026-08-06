@@ -1,0 +1,26 @@
+name: 'mealkit_pipeline'
+version: '1.0.0'
+config-version: 2
+
+profile: 'mealkit_pipeline'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# This tells dbt which folder each model lives in and how to materialize it.
+# "view" = a saved SQL query, recomputed each time it's queried (cheap, always fresh).
+# "table" = physically stored result (faster to query, needs a rebuild to refresh).
+# Staging models are views (thin, cheap, always in sync with seeds).
+# Marts are tables (this is what downstream tools like Power BI would query directly).
+models:
+  mealkit_pipeline:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

@@ -1,0 +1,34 @@
+version: 2
+
+# dbt tests are assertions about your data, written as YAML, run with `dbt test`.
+# This is the single biggest "production-grade" signal in this whole project:
+# it proves you don't just write SQL, you defend it with guarantees.
+#
+# Built-in generic tests you'll use constantly:
+#   not_null       -> column must never be null
+#   unique         -> column must have no duplicate values
+#   accepted_values -> column must only contain a fixed set of values
+#   relationships  -> a foreign key must exist in the referenced table
+#                     (this is what enforces your star schema's integrity)
+
+models:
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+
