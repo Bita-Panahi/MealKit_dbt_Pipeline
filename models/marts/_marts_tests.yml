@@ -26,12 +26,14 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_customer')
-              field: customer_id
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
 
       - name: week
         tests:
          - not_null
          - relationships:
-              to: ref('dim_week')
-              field: week
+              arguments:
+                to: ref('dim_week')
+                field: week

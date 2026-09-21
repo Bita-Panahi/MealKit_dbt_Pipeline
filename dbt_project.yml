@@ -19,3 +19,9 @@ models:
       +materialized: view
     marts:
       +materialized: table
+
+seeds:
+  mealkit_pipeline:
+    orders:
+      +column_types:
+        box_price_nok: numeric
