@@ -1,10 +1,10 @@
 # Meal-Kit dbt Pipeline
 
-A small dimensional data pipeline for a Nordic meal-kit subscription business, built with dbt and DuckDB.
+A small dimensional data pipeline for a Nordic meal-kit subscription business, built with dbt, running on DuckDB locally and Google BigQuery in the cloud.
 
 Raw customer and order data is cleaned in a staging layer, then modeled into a star schema: one fact table (`fact_orders`) and two dimension tables (`dim_customer`, `dim_week`). Every model has tests attached, and a GitHub Actions workflow runs the full build on every push.
 
-DuckDB is used as a free, local stand-in for a warehouse like Databricks or Snowflake. The dbt code itself is adapter-agnostic, so pointing it at a real warehouse is a config change, not a rewrite.
+DuckDB is used as a free, local warehouse for development and CI. The same models also run on Google BigQuery, which needed only a second dbt target and two small fixes.
 
 ## Structure
 
@@ -49,16 +49,50 @@ Synthetic data generated for this project, customer signups, brand/region, weekl
 
 ## Lineage graph
 
-![dbt lineage graph](images/lineage_graph.png)
+![dbt lineage graph](images/Graph.png)
 
 Generated with `dbt docs generate && dbt docs serve`. Raw seeds flow through staging into the mart layer; `stg_orders` feeds both `dim_week` and `fact_orders`.
 
+## Running on BigQuery
+
+The same models run on Google BigQuery through a second dbt target (`--target bq`).
+I have made two changes to the project:
+
+- Seeds are read with `ref()` instead of `source()`. Seeds are loaded by dbt itself, so `ref()` tells dbt that staging depends on them and it always loads the data first. With `source()`, a fresh BigQuery dataset failed because the staging views were created before the seed tables existed. DuckDB hid this because old tables were left over from earlier runs.
+
+- The price column has an explicit type. `box_price_nok` is set to `numeric` in `dbt_project.yml`. dbt had thought that the type was `integer` from some values like `322.0`; so DuckDB had accepted it, but BigQuery had rejected because it's stricter. Also, for money, `numeric` is the right type. 
+
+
+### How to run it
+
+1. Create a Google Cloud project (the free BigQuery sandbox is enough).
+2. Install the Google Cloud CLI and log in: `gcloud auth application-default login`
+3. `pip install dbt-bigquery`
+4. Add a `bq` output to `profiles.yml`:
+
+```yaml
+   bq:
+     type: bigquery
+     method: oauth
+     project: <your-project-id>
+     dataset: mealkit
+     location: EU
+     threads: 4
+```
+
+5. `dbt build --target bq`
+
+![BigQuery console](images/bigquery_console.png)
+
+CI still runs on DuckDB, so every push is tested without cloud credentials or cost.
+
 ## Skills & tools
 
-- dbt: sources, staging/mart model layering, `ref()`/`source()`, seeds, generic tests (`unique`, `not_null`, `relationships`), docs/lineage graph
+- dbt: seeds with explicit column types, staging/mart model layering, `ref()`, generic tests (`unique`, `not_null`, `relationships`), docs/lineage graph
 - SQL: CTEs, type casting, derived columns, safe division (`nullif`)
 - Dimensional modeling: star schema design, defining grain, fact vs. dimension tables
-- DuckDB as a local warehouse
+- DuckDB as a local warehouse, Google BigQuery (EU) as a cloud warehouse
+- Google Cloud CLI (OAuth / Application Default Credentials)
 - Data quality testing (16 tests across staging and marts)
 - Git / GitHub, GitHub Actions for CI
 - YAML configuration (`dbt_project.yml`, schema/test files)
